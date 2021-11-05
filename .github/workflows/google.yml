@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - gong023-patch-1
 
 env:
   PROJECT_ID: ${{ secrets.PROJECT_ID }}
