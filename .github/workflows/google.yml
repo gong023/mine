@@ -47,4 +47,4 @@ jobs:
       with:
         service: mine
         image: gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
-        credentials: ${{ secrets.SA_KEY }}
+        region: asia-southeast1
