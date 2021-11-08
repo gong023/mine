@@ -24,4 +24,4 @@ jobs:
         version: latest
 
     - name: Test
-      run: go test -v ./...
+      run: ./script/test all

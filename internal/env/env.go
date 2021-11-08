@@ -8,8 +8,9 @@ import (
 
 type (
 	Config struct {
-		BybitKey string `env:"BYBIT_KEY"`
-		BybitSec string `env:"BYBIT_SEC"`
+		BybitHost string `env:"BYBIT_HOST" envDefault:"https://api-testnet.bybit.com"`
+		BybitKey  string `env:"BYBIT_KEY,required"`
+		BybitSec  string `env:"BYBIT_SEC,required"`
 	}
 
 	key struct{}

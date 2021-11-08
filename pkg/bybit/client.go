@@ -33,9 +33,9 @@ type Client struct {
 	apiSecret string
 }
 
-func NewClient(host string, cfg env.Config) *Client {
+func NewClient(cfg env.Config) *Client {
 	return &Client{
-		host:      host,
+		host:      cfg.BybitHost,
 		apiKey:    cfg.BybitKey,
 		apiSecret: cfg.BybitSec,
 	}

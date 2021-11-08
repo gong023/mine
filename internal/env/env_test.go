@@ -5,14 +5,16 @@ import (
 	"testing"
 )
 
-func TestEnv(t *testing.T) {
-	cfg, err := New()
-	if err != nil {
-		t.Fatal(err)
+func TestNew(t *testing.T) {
+	_, err := New()
+	if err == nil {
+		t.Fatal("must be error due to missing required fields")
 	}
+}
 
+func TestWithCtx(t *testing.T) {
+	cfg := Config{BybitKey: "test"}
 	ctx := context.Background()
-	cfg.BybitKey = "test"
 	ctx = With(ctx, cfg)
 
 	if cfg := MustValue(ctx); cfg.BybitKey != "test" {

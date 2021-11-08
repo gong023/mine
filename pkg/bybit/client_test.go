@@ -8,9 +8,10 @@ import (
 )
 
 func TestToSortedURLValues(t *testing.T) {
-	client := NewClient(TestHost, env.Config{
-		BybitKey: "dummy_key",
-		BybitSec: "dummy_sec",
+	client := NewClient(env.Config{
+		BybitHost: TestHost,
+		BybitKey:  "dummy_key",
+		BybitSec:  "dummy_sec",
 	})
 	cases := map[string]struct {
 		req  Request
@@ -40,9 +41,10 @@ func TestToSortedURLValues(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	client := NewClient(TestHost, env.Config{
-		BybitKey: "dummy_key",
-		BybitSec: "dummy_sec",
+	client := NewClient(env.Config{
+		BybitHost: TestHost,
+		BybitKey:  "dummy_key",
+		BybitSec:  "dummy_sec",
 	})
 	_, err := client.sign(&WalletBalanceReq{})
 	if err != nil {
