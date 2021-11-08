@@ -107,7 +107,7 @@ func (c *Client) toSortedURLValues(r Request) (url.Values, error) {
 	srcMap["timestamp"] = time.Now().Unix()
 
 	var keys []string
-	for k, _ := range srcMap {
+	for k := range srcMap {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
