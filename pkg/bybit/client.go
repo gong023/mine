@@ -9,7 +9,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"reflect"
 	"sort"
 	"strconv"
@@ -23,6 +22,8 @@ const (
 	TestHost = "https://api-testnet.bybit.com"
 
 	SymbolBTCUSD = "BTCUSD"
+
+	RetCodeSuccess float32 = 0
 )
 
 var client = &http.Client{}
@@ -49,11 +50,14 @@ func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (r
 	if err := json.Unmarshal(b, &res); err != nil {
 		return res, fmt.Errorf("body:%s, err:%s", b, err)
 	}
+	if res.Response.RetCode != RetCodeSuccess {
+		return res, fmt.Errorf("failed GET request:%s, res:%s", req.Path(), b)
+	}
 	return res, nil
 }
 
 func (c *Client) doGet(req GetRequest) ([]byte, error) {
-	vals, err := c.toSortedURLValues(req)
+	param, err := c.toSortedParamString(req)
 	if err != nil {
 		return nil, err
 	}
@@ -61,9 +65,9 @@ func (c *Client) doGet(req GetRequest) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	vals.Add("sign", sign)
+	param += "&sign=" + sign
 
-	url := fmt.Sprintf("%s%s?%s", c.host, req.Path(), vals.Encode())
+	url := fmt.Sprintf("%s%s?%s", c.host, req.Path(), param)
 	r, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -78,40 +82,42 @@ func (c *Client) doGet(req GetRequest) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	_ = response.Body.Close()
 	return body, nil
 }
 
 func (c *Client) sign(r Request) (string, error) {
-	q, err := c.toSortedURLValues(r)
+	q, err := c.toSortedParamString(r)
 	if err != nil {
 		return "", err
 	}
 	h := hmac.New(sha256.New, []byte(c.apiSecret))
-	if _, err := io.WriteString(h, q.Encode()); err != nil {
+	if _, err := io.WriteString(h, q); err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-func (c *Client) toSortedURLValues(r Request) (url.Values, error) {
+func (c *Client) toSortedParamString(r Request) (string, error) {
 	sb, err := json.Marshal(r)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	var srcMap map[string]interface{}
 	if err := json.Unmarshal(sb, &srcMap); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	srcMap["api_key"] = c.apiKey
-	srcMap["timestamp"] = time.Now().Unix()
+	srcMap["timestamp"] = time.Now().UnixMilli()
 
 	var keys []string
 	for k := range srcMap {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	dest := url.Values{}
+	// url.Values shouldn't work because it's map, doesn't care the order.
+	dest := ""
 	for _, k := range keys {
 		val := ""
 		switch reflect.TypeOf(srcMap[k]).Kind() {
@@ -124,8 +130,8 @@ func (c *Client) toSortedURLValues(r Request) (url.Values, error) {
 		case reflect.String:
 			val = srcMap[k].(string)
 		}
-		dest.Add(k, val)
+		dest += fmt.Sprintf("%s=%s&", k, val)
 	}
 
-	return dest, nil
+	return dest[0 : len(dest)-1], nil
 }

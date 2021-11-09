@@ -16,35 +16,41 @@ type (
 	}
 
 	Response struct {
-		ExtCode          string `json:"ext_code"`
-		ExtInfo          string `json:"ext_info"`
-		RateLimit        int64  `json:"rate_limit"`
-		RateLimitResetMs int64  `json:"rate_limit_reset_ms"`
-		RateLimitStatus  int64  `json:"rate_limit_status"`
-		RetCode          int64  `json:"ret_code"`
-		RetMsg           string `json:"ret_msg"`
-		TimeNow          string `json:"time_now"`
+		ExtCode          string  `json:"ext_code"`
+		ExtInfo          string  `json:"ext_info"`
+		RateLimit        int64   `json:"rate_limit"`
+		RateLimitResetMs int64   `json:"rate_limit_reset_ms"`
+		RateLimitStatus  int64   `json:"rate_limit_status"`
+		RetCode          float32 `json:"ret_code"`
+		RetMsg           string  `json:"ret_msg"`
+		TimeNow          string  `json:"time_now"`
 	}
 
 	WalletBalanceRes struct {
 		Response
 		Result struct {
-			BTC struct {
-				AvailableBalance float64 `json:"available_balance"`
-				CumRealisedPnl   int64   `json:"cum_realised_pnl"`
-				Equity           int64   `json:"equity"`
-				GivenCash        int64   `json:"given_cash"`
-				OccClosingFee    int64   `json:"occ_closing_fee"`
-				OccFundingFee    int64   `json:"occ_funding_fee"`
-				OrderMargin      float64 `json:"order_margin"`
-				PositionMargin   int64   `json:"position_margin"`
-				RealisedPnl      int64   `json:"realised_pnl"`
-				ServiceCash      int64   `json:"service_cash"`
-				UnrealisedPnl    int64   `json:"unrealised_pnl"`
-				UsedMargin       float64 `json:"used_margin"`
-				WalletBalance    int64   `json:"wallet_balance"`
-			} `json:"BTC"`
+			BTC  WalletBalance `json:"BTC"`
+			USDT WalletBalance `json:"USDT"`
+			EOS  WalletBalance `json:"EOS"`
+			XRP  WalletBalance `json:"XRP"`
+			DOT  WalletBalance `json:"DOT"`
 		} `json:"result"`
+	}
+
+	WalletBalance struct {
+		Equity           float64 `json:"equity,omitempty"`
+		AvailableBalance float64 `json:"available_balance,omitempty"`
+		UsedMargin       float64 `json:"used_margin,omitempty"`
+		OrderMargin      float64 `json:"order_margin,omitempty"`
+		PositionMargin   float64 `json:"position_margin,omitempty"`
+		OccClosingFee    float64 `json:"occ_closing_fee,omitempty"`
+		OccFundingFee    float64 `json:"occ_funding_fee,omitempty"`
+		WalletBalance    float64 `json:"wallet_balance,omitempty"`
+		RealisedPnl      float64 `json:"realised_pnl,omitempty"`
+		UnrealisedPnl    float64 `json:"unrealised_pnl,omitempty"`
+		CumRealisedPnl   float64 `json:"cum_realised_pnl,omitempty"`
+		GivenCash        float64 `json:"given_cash,omitempty"`
+		ServiceCash      float64 `json:"service_cash,omitempty"`
 	}
 )
 
