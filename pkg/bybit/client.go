@@ -13,8 +13,6 @@ import (
 	"sort"
 	"strconv"
 	"time"
-
-	"github.com/gong023/mine/internal/env"
 )
 
 const (
@@ -34,16 +32,16 @@ type Client struct {
 	apiSecret string
 }
 
-func NewClient(cfg env.Config) *Client {
+func NewClient(host, key, secret string) *Client {
 	return &Client{
-		host:      cfg.BybitHost,
-		apiKey:    cfg.BybitKey,
-		apiSecret: cfg.BybitSec,
+		host:      host,
+		apiKey:    key,
+		apiSecret: secret,
 	}
 }
 
 func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (res WalletBalanceRes, err error) {
-	b, err := c.doGet(req)
+	b, err := c.doGet(ctx, req)
 	if err != nil {
 		return res, err
 	}
@@ -56,7 +54,7 @@ func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (r
 	return res, nil
 }
 
-func (c *Client) doGet(req GetRequest) ([]byte, error) {
+func (c *Client) doGet(ctx context.Context, req GetRequest) ([]byte, error) {
 	param, err := c.toSortedParamString(req)
 	if err != nil {
 		return nil, err
@@ -73,6 +71,7 @@ func (c *Client) doGet(req GetRequest) ([]byte, error) {
 		return nil, err
 	}
 	r.Header.Add("Content-Type", "application/json")
+	r = r.WithContext(ctx)
 
 	response, err := client.Do(r)
 	if err != nil {

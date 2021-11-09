@@ -3,26 +3,26 @@ package bybit
 import (
 	"regexp"
 	"testing"
-
-	"github.com/gong023/mine/internal/env"
 )
 
 func TestToSortedURLValues(t *testing.T) {
-	client := NewClient(env.Config{
-		BybitHost: TestHost,
-		BybitKey:  "dummy_key",
-		BybitSec:  "dummy_sec",
-	})
+	client := NewClient(TestHost, "dummy_key", "dummy_sec")
 	cases := map[string]struct {
 		req  Request
 		want *regexp.Regexp
 	}{
-		"doc_sample": {
+		"simple": {
 			req: &WalletBalanceReq{
 				Coin: "BTC",
 			},
 			want: regexp.MustCompile(
 				"api_key=dummy_key&coin=BTC&timestamp=.*",
+			),
+		},
+		"omitempty": {
+			req: &WalletBalanceReq{},
+			want: regexp.MustCompile(
+				"api_key=dummy_key&timestamp=.*",
 			),
 		},
 	}
@@ -41,11 +41,7 @@ func TestToSortedURLValues(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	client := NewClient(env.Config{
-		BybitHost: TestHost,
-		BybitKey:  "dummy_key",
-		BybitSec:  "dummy_sec",
-	})
+	client := NewClient(TestHost, "dummy_key", "dummy_sec")
 	_, err := client.sign(&WalletBalanceReq{})
 	if err != nil {
 		t.Fatal(err)

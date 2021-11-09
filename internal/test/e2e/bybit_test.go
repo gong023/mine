@@ -17,7 +17,7 @@ func TestGetWalletBalance(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	cli := bybit.NewClient(cfg)
+	cli := bybit.NewClient(cfg.BybitHost, cfg.BybitKey, cfg.BybitSec)
 	_, err = cli.GetWalletBalance(ctx, &bybit.WalletBalanceReq{})
 	if err != nil {
 		t.Fatal(err)
