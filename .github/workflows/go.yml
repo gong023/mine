@@ -27,6 +27,6 @@ jobs:
     - name: Test
       run: ./script/test all
       env:
-        BYBIT_HOST: ${{ secret.TEST_BYBIT_HOST }}
-        BYBIT_KEY: ${{ secret.TEST_BYBIT_KEY }}
-        BYBIT_SEC: ${{ secret.TEST_BYBIT_SEC }}
+        BYBIT_HOST: ${{ secrets.TEST_BYBIT_HOST }}
+        BYBIT_KEY: ${{ secrets.TEST_BYBIT_KEY }}
+        BYBIT_SEC: ${{ secrets.TEST_BYBIT_SEC }}
