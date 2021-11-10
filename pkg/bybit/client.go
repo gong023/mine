@@ -13,6 +13,8 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/iancoleman/orderedmap"
 )
 
 const (
@@ -55,11 +57,11 @@ func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (r
 }
 
 func (c *Client) doGet(ctx context.Context, req GetRequest) ([]byte, error) {
-	param, _, err := c.toSortedParamString(req)
+	param, _, err := c.composeQuery(req)
 	if err != nil {
 		return nil, err
 	}
-	sign, err := c.sign(req)
+	sign, _, err := c.sign(req)
 	if err != nil {
 		return nil, err
 	}
@@ -85,19 +87,19 @@ func (c *Client) doGet(ctx context.Context, req GetRequest) ([]byte, error) {
 	return body, nil
 }
 
-func (c *Client) sign(r Request) (string, error) {
-	q, _, err := c.toSortedParamString(r)
+func (c *Client) sign(r Request) (string, int64, error) {
+	q, ts, err := c.composeQuery(r)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	h := hmac.New(sha256.New, []byte(c.apiSecret))
 	if _, err := io.WriteString(h, q); err != nil {
-		return "", err
+		return "", 0, err
 	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
+	return fmt.Sprintf("%x", h.Sum(nil)), ts, nil
 }
 
-func (c *Client) toSortedParamString(r Request) (string, int64, error) {
+func (c *Client) composeQuery(r Request) (string, int64, error) {
 	sb, err := json.Marshal(r)
 	if err != nil {
 		return "", 0, err
@@ -134,4 +136,31 @@ func (c *Client) toSortedParamString(r Request) (string, int64, error) {
 	}
 
 	return dest[0 : len(dest)-1], timestamp, nil
+}
+
+func (c *Client) composeBody(req PostRequest) ([]byte, error) {
+	sb, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	var srcMap map[string]interface{}
+	if err := json.Unmarshal(sb, &srcMap); err != nil {
+		return nil, err
+	}
+
+	sign, timestamp, err := c.sign(req)
+	if err != nil {
+		return nil, err
+	}
+
+	o := orderedmap.New()
+	for k, v := range srcMap {
+		o.Set(k, v)
+	}
+	o.Set("api_key", c.apiKey)
+	o.Set("timestamp", timestamp)
+	o.SortKeys(sort.Strings)
+	o.Set("sign", sign)
+
+	return o.MarshalJSON()
 }

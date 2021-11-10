@@ -56,8 +56,8 @@ type (
 	OrderRes struct {
 		Response
 		Result struct {
-			OrderId       string  `json:"order_id,omitempty"`
-			UserId        float32 `json:"user_id,omitempty"`
+			OrderID       string  `json:"order_id,omitempty"`
+			UserID        float32 `json:"user_id,omitempty"`
 			Symbol        string  `json:"symbol,omitempty"`
 			Side          string  `json:"side,omitempty"`
 			OrderType     string  `json:"order_type,omitempty"`
@@ -72,7 +72,7 @@ type (
 			CumExecValue  float32 `json:"cum_exec_value,omitempty"`
 			CumExecFee    float64 `json:"cum_exec_fee,omitempty"`
 			RejectReason  string  `json:"reject_reason,omitempty"`
-			OrderLinkId   string  `json:"order_link_id,omitempty"`
+			OrderLinkID   string  `json:"order_link_id,omitempty"`
 			CreatedAt     string  `json:"created_at,omitempty"`
 			UpdatedAt     string  `json:"updated_at,omitempty"`
 		} `json:"result"`
@@ -104,7 +104,7 @@ type OrderCreateReq struct {
 	TpTriggerBy    string  `json:"tp_trigger_by,omitempty"`
 	SlTriggerBy    string  `json:"sl_trigger_by,omitempty"`
 	CloseOnTrigger bool    `json:"close_on_trigger,omitempty"`
-	OrderLinkId    string  `json:"order_link_id,omitempty"`
+	OrderLinkID    string  `json:"order_link_id,omitempty"`
 }
 
 func (o *OrderCreateReq) Path() string {
@@ -112,5 +112,19 @@ func (o *OrderCreateReq) Path() string {
 }
 
 func (o *OrderCreateReq) IsPost() bool {
+	return true
+}
+
+type OrderCancelReq struct {
+	Symbol      string `json:"symbol"`
+	OrderID     string `json:"order_id,omitempty"`
+	OrderLinkID string `json:"order_link_id,omitempty"`
+}
+
+func (o *OrderCancelReq) Path() string {
+	return "/v2/private/order/cancel"
+}
+
+func (o *OrderCancelReq) IsPost() bool {
 	return true
 }
