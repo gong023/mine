@@ -53,7 +53,7 @@ type (
 		ServiceCash      float64 `json:"service_cash,omitempty"`
 	}
 
-	OrderRes struct {
+	OrderCreateRes struct {
 		Response
 		Result struct {
 			OrderID       string  `json:"order_id,omitempty"`

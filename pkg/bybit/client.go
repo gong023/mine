@@ -1,6 +1,7 @@
 package bybit
 
 import (
+	"bytes"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -43,20 +44,36 @@ func NewClient(host, key, secret string) *Client {
 }
 
 func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (res WalletBalanceRes, err error) {
-	b, err := c.doGet(ctx, req)
+	getReq, err := c.composeGet(req)
 	if err != nil {
 		return res, err
 	}
-	if err := json.Unmarshal(b, &res); err != nil {
-		return res, fmt.Errorf("body:%s, err:%s", b, err)
+	rawResBody, err := c.doRequest(ctx, getReq, &res)
+	if err != nil {
+		return res, err
 	}
 	if res.Response.RetCode != RetCodeSuccess {
-		return res, fmt.Errorf("failed GET request:%s, res:%s", req.Path(), b)
+		return res, fmt.Errorf("failed GET request:%s, res:%s", req.Path(), rawResBody)
 	}
 	return res, nil
 }
 
-func (c *Client) doGet(ctx context.Context, req GetRequest) ([]byte, error) {
+func (c *Client) OrderCreate(ctx context.Context, req *OrderCreateReq) (res OrderCreateRes, err error) {
+	postReq, err := c.composePost(req)
+	if err != nil {
+		return res, err
+	}
+	rawResBody, err := c.doRequest(ctx, postReq, &res)
+	if err != nil {
+		return res, err
+	}
+	if res.Response.RetCode != RetCodeSuccess {
+		return res, fmt.Errorf("failed POST request:%s, resBody:%s", req.Path(), rawResBody)
+	}
+	return res, nil
+}
+
+func (c *Client) composeGet(req GetRequest) (*http.Request, error) {
 	param, _, err := c.composeQuery(req)
 	if err != nil {
 		return nil, err
@@ -72,19 +89,22 @@ func (c *Client) doGet(ctx context.Context, req GetRequest) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	r.Header.Add("Content-Type", "application/json")
-	r = r.WithContext(ctx)
 
-	response, err := client.Do(r)
+	return r, nil
+}
+
+func (c *Client) composePost(req PostRequest) (*http.Request, error) {
+	body, err := c.composeBody(req)
 	if err != nil {
 		return nil, err
 	}
-	body, err := ioutil.ReadAll(response.Body)
+
+	url := c.host + req.Path()
+	r, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
-	_ = response.Body.Close()
-	return body, nil
+	return r, nil
 }
 
 func (c *Client) sign(r Request) (string, int64, error) {
@@ -163,4 +183,23 @@ func (c *Client) composeBody(req PostRequest) ([]byte, error) {
 	o.Set("sign", sign)
 
 	return o.MarshalJSON()
+}
+
+func (c *Client) doRequest(ctx context.Context, req *http.Request, res interface{}) ([]byte, error) {
+	req.Header.Add("Content-Type", "application/json")
+	req = req.WithContext(ctx)
+	response, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if err := json.Unmarshal(body, &res); err != nil {
+		return nil, fmt.Errorf("body:%s, err:%s", body, err)
+	}
+	return body, nil
 }
