@@ -55,7 +55,7 @@ func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (r
 }
 
 func (c *Client) doGet(ctx context.Context, req GetRequest) ([]byte, error) {
-	param, err := c.toSortedParamString(req)
+	param, _, err := c.toSortedParamString(req)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *Client) doGet(ctx context.Context, req GetRequest) ([]byte, error) {
 }
 
 func (c *Client) sign(r Request) (string, error) {
-	q, err := c.toSortedParamString(r)
+	q, _, err := c.toSortedParamString(r)
 	if err != nil {
 		return "", err
 	}
@@ -97,18 +97,19 @@ func (c *Client) sign(r Request) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-func (c *Client) toSortedParamString(r Request) (string, error) {
+func (c *Client) toSortedParamString(r Request) (string, int64, error) {
 	sb, err := json.Marshal(r)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	var srcMap map[string]interface{}
 	if err := json.Unmarshal(sb, &srcMap); err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	srcMap["api_key"] = c.apiKey
-	srcMap["timestamp"] = time.Now().UnixMilli()
+	timestamp := time.Now().UnixMilli()
+	srcMap["timestamp"] = timestamp
 
 	var keys []string
 	for k := range srcMap {
@@ -132,5 +133,5 @@ func (c *Client) toSortedParamString(r Request) (string, error) {
 		dest += fmt.Sprintf("%s=%s&", k, val)
 	}
 
-	return dest[0 : len(dest)-1], nil
+	return dest[0 : len(dest)-1], timestamp, nil
 }
