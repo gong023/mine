@@ -99,6 +99,10 @@ type (
 			UpdatedAt     string  `json:"updated_at,omitempty"`
 		} `json:"result"`
 	}
+
+	PositionLeverageSaveRes struct {
+		Response
+	}
 )
 
 type WalletBalanceReq struct {
@@ -148,5 +152,19 @@ func (o *OrderCancelReq) Path() string {
 }
 
 func (o *OrderCancelReq) IsPost() bool {
+	return true
+}
+
+type PositionLeverageSaveReq struct {
+	Symbol       string  `json:"symbol"`
+	Leverage     float64 `json:"leverage"`
+	LeverageOnly bool    `json:"leverage_only,omitempty"`
+}
+
+func (p *PositionLeverageSaveReq) Path() string {
+	return "/v2/private/position/leverage/save"
+}
+
+func (p *PositionLeverageSaveReq) IsPost() bool {
 	return true
 }

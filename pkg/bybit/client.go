@@ -69,6 +69,21 @@ func (c *Client) OrderCreate(ctx context.Context, req *OrderCreateReq) (res *Ord
 	return res, nil
 }
 
+func (c *Client) PositionLeverageSave(ctx context.Context, req *PositionLeverageSaveReq) (res *PositionLeverageSaveRes, err error) {
+	postReq, err := c.composePost(req)
+	if err != nil {
+		return res, err
+	}
+	rawResBody, err := c.doRequest(ctx, postReq, &res)
+	if err != nil {
+		return res, err
+	}
+	if res.Response.RetCode != RetCodeSuccess {
+		return res, fmt.Errorf("failed POST request:%s, resBody:%s", req.Path(), rawResBody)
+	}
+	return res, nil
+}
+
 func (c *Client) composeGet(req GetRequest) (*http.Request, error) {
 	param, _, err := c.composeQuery(req)
 	if err != nil {
