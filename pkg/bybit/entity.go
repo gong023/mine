@@ -1,5 +1,27 @@
 package bybit
 
+const (
+	SymbolBTCUSD = "BTCUSD"
+	SymbolUSDT   = "USDT"
+
+	RetCodeSuccess float32 = 0
+
+	SideBuy  = "Buy"
+	SideSell = "Sell"
+
+	OrderTypeMarket = "Market"
+	OrderTypeLimit  = "Limit"
+
+	TIFGoodTillCancel    = "GoodTillCancel"
+	TIFImmediateOrCancel = "ImmediateOrCancel"
+	TIFFillOrKill        = "FillOrKill"
+	TIFPostOnly          = "PostOnly"
+
+	TriggerByLastPrice   = "LastPrice"
+	TriggerByIndexPrice  = "IndexPrice"
+	TriggerByMarketPrice = "MarkPrice"
+)
+
 type (
 	Request interface {
 		Path() string
@@ -62,7 +84,7 @@ type (
 			Side          string  `json:"side,omitempty"`
 			OrderType     string  `json:"order_type,omitempty"`
 			Price         float64 `json:"price,omitempty"`
-			Qty           string  `json:"qty,omitempty"`
+			Qty           float64 `json:"qty,omitempty"`
 			TimeInForce   string  `json:"time_in_force,omitempty"`
 			OrderStatus   string  `json:"order_status,omitempty"`
 			LastExecTime  float64 `json:"last_exec_time,omitempty"`

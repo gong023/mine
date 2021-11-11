@@ -21,10 +21,6 @@ import (
 const (
 	Host     = "https://api.bybit.com"
 	TestHost = "https://api-testnet.bybit.com"
-
-	SymbolBTCUSD = "BTCUSD"
-
-	RetCodeSuccess float32 = 0
 )
 
 var client = &http.Client{}
@@ -43,7 +39,7 @@ func NewClient(host, key, secret string) *Client {
 	}
 }
 
-func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (res WalletBalanceRes, err error) {
+func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (res *WalletBalanceRes, err error) {
 	getReq, err := c.composeGet(req)
 	if err != nil {
 		return res, err
@@ -58,7 +54,7 @@ func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (r
 	return res, nil
 }
 
-func (c *Client) OrderCreate(ctx context.Context, req *OrderCreateReq) (res OrderCreateRes, err error) {
+func (c *Client) OrderCreate(ctx context.Context, req *OrderCreateReq) (res *OrderCreateRes, err error) {
 	postReq, err := c.composePost(req)
 	if err != nil {
 		return res, err
@@ -85,12 +81,7 @@ func (c *Client) composeGet(req GetRequest) (*http.Request, error) {
 	param += "&sign=" + sign
 
 	url := fmt.Sprintf("%s%s?%s", c.host, req.Path(), param)
-	r, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return r, nil
+	return http.NewRequest(http.MethodGet, url, nil)
 }
 
 func (c *Client) composePost(req PostRequest) (*http.Request, error) {
@@ -100,11 +91,7 @@ func (c *Client) composePost(req PostRequest) (*http.Request, error) {
 	}
 
 	url := c.host + req.Path()
-	r, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
+	return http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
 }
 
 func (c *Client) sign(r Request) (string, int64, error) {
