@@ -5,6 +5,7 @@ const (
 	SymbolUSDT   = "USDT"
 
 	RetCodeSuccess float32 = 0
+	RetMsgOK               = "OK"
 
 	SideBuy  = "Buy"
 	SideSell = "Sell"
@@ -23,18 +24,12 @@ const (
 )
 
 type (
-	Request interface {
+	RequestType interface {
 		Path() string
 	}
 
-	GetRequest interface {
-		Request
-		IsGet() bool
-	}
-
-	PostRequest interface {
-		Request
-		IsPost() bool
+	ResponseType interface {
+		GetCommon() Response
 	}
 
 	Response struct {
@@ -113,8 +108,8 @@ func (w *WalletBalanceReq) Path() string {
 	return "/v2/private/wallet/balance"
 }
 
-func (w *WalletBalanceReq) IsGet() bool {
-	return true
+func (w *WalletBalanceRes) GetCommon() Response {
+	return w.Response
 }
 
 type OrderCreateReq struct {
@@ -137,10 +132,6 @@ func (o *OrderCreateReq) Path() string {
 	return "/v2/private/order/create"
 }
 
-func (o *OrderCreateReq) IsPost() bool {
-	return true
-}
-
 type OrderCancelReq struct {
 	Symbol      string `json:"symbol"`
 	OrderID     string `json:"order_id,omitempty"`
@@ -151,8 +142,8 @@ func (o *OrderCancelReq) Path() string {
 	return "/v2/private/order/cancel"
 }
 
-func (o *OrderCancelReq) IsPost() bool {
-	return true
+func (o *OrderCreateRes) GetCommon() Response {
+	return o.Response
 }
 
 type PositionLeverageSaveReq struct {
@@ -165,6 +156,6 @@ func (p *PositionLeverageSaveReq) Path() string {
 	return "/v2/private/position/leverage/save"
 }
 
-func (p *PositionLeverageSaveReq) IsPost() bool {
-	return true
+func (p *PositionLeverageSaveRes) GetCommon() Response {
+	return p.Response
 }

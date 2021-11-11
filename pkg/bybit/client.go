@@ -3,19 +3,11 @@ package bybit
 import (
 	"bytes"
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"reflect"
-	"sort"
-	"strconv"
-	"time"
-
-	"github.com/iancoleman/orderedmap"
 )
 
 const (
@@ -27,181 +19,90 @@ var client = &http.Client{}
 
 type Client struct {
 	host      string
-	apiKey    string
-	apiSecret string
+	authParam *authParam
 }
 
 func NewClient(host, key, secret string) *Client {
 	return &Client{
-		host:      host,
-		apiKey:    key,
-		apiSecret: secret,
+		host: host,
+		authParam: &authParam{
+			apiKey:    key,
+			apiSecret: secret,
+		},
 	}
 }
 
-func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (res *WalletBalanceRes, err error) {
-	getReq, err := c.composeGet(req)
-	if err != nil {
-		return res, err
-	}
-	rawResBody, err := c.doRequest(ctx, getReq, &res)
-	if err != nil {
-		return res, err
-	}
-	if res.Response.RetCode != RetCodeSuccess {
-		return res, fmt.Errorf("failed GET request:%s, res:%s", req.Path(), rawResBody)
-	}
-	return res, nil
+func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (*WalletBalanceRes, error) {
+	res := &WalletBalanceRes{}
+	err := c.doGet(ctx, req, res)
+	return res, err
 }
 
-func (c *Client) OrderCreate(ctx context.Context, req *OrderCreateReq) (res *OrderCreateRes, err error) {
-	postReq, err := c.composePost(req)
-	if err != nil {
-		return res, err
-	}
-	rawResBody, err := c.doRequest(ctx, postReq, &res)
-	if err != nil {
-		return res, err
-	}
-	if res.Response.RetCode != RetCodeSuccess {
-		return res, fmt.Errorf("failed POST request:%s, resBody:%s", req.Path(), rawResBody)
-	}
-	return res, nil
+func (c *Client) OrderCreate(ctx context.Context, req *OrderCreateReq) (*OrderCreateRes, error) {
+	res := &OrderCreateRes{}
+	err := c.doPost(ctx, req, res)
+	return res, err
 }
 
-func (c *Client) PositionLeverageSave(ctx context.Context, req *PositionLeverageSaveReq) (res *PositionLeverageSaveRes, err error) {
-	postReq, err := c.composePost(req)
-	if err != nil {
-		return res, err
-	}
-	rawResBody, err := c.doRequest(ctx, postReq, &res)
-	if err != nil {
-		return res, err
-	}
-	if res.Response.RetCode != RetCodeSuccess {
-		return res, fmt.Errorf("failed POST request:%s, resBody:%s", req.Path(), rawResBody)
-	}
-	return res, nil
+func (c *Client) PositionLeverageSave(ctx context.Context, req *PositionLeverageSaveReq) (*PositionLeverageSaveRes, error) {
+	res := &PositionLeverageSaveRes{}
+	err := c.doPost(ctx, req, res)
+	return res, err
 }
 
-func (c *Client) composeGet(req GetRequest) (*http.Request, error) {
-	param, _, err := c.composeQuery(req)
+func (c *Client) doGet(ctx context.Context, req RequestType, res ResponseType) error {
+	param, _, err := c.authParam.composeQuery(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	sign, _, err := c.sign(req)
+	sign, _, err := c.authParam.sign(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	param += "&sign=" + sign
 
 	url := fmt.Sprintf("%s%s?%s", c.host, req.Path(), param)
-	return http.NewRequest(http.MethodGet, url, nil)
+	httpReq, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+
+	return c.doRequest(ctx, httpReq, res)
 }
 
-func (c *Client) composePost(req PostRequest) (*http.Request, error) {
-	body, err := c.composeBody(req)
+func (c *Client) doPost(ctx context.Context, req RequestType, res ResponseType) error {
+	body, err := c.authParam.composeBody(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	url := c.host + req.Path()
-	return http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
+	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+
+	return c.doRequest(ctx, httpReq, res)
 }
 
-func (c *Client) sign(r Request) (string, int64, error) {
-	q, ts, err := c.composeQuery(r)
-	if err != nil {
-		return "", 0, err
-	}
-	h := hmac.New(sha256.New, []byte(c.apiSecret))
-	if _, err := io.WriteString(h, q); err != nil {
-		return "", 0, err
-	}
-	return fmt.Sprintf("%x", h.Sum(nil)), ts, nil
-}
-
-func (c *Client) composeQuery(r Request) (string, int64, error) {
-	sb, err := json.Marshal(r)
-	if err != nil {
-		return "", 0, err
-	}
-	var srcMap map[string]interface{}
-	if err := json.Unmarshal(sb, &srcMap); err != nil {
-		return "", 0, err
-	}
-
-	srcMap["api_key"] = c.apiKey
-	timestamp := time.Now().UnixMilli()
-	srcMap["timestamp"] = timestamp
-
-	var keys []string
-	for k := range srcMap {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	// url.Values shouldn't work because it's map, doesn't care the order.
-	dest := ""
-	for _, k := range keys {
-		val := ""
-		switch reflect.TypeOf(srcMap[k]).Kind() {
-		case reflect.Float64:
-			val = strconv.FormatFloat(srcMap[k].(float64), 'f', -1, 64)
-		case reflect.Int64:
-			val = strconv.FormatInt(srcMap[k].(int64), 10)
-		case reflect.Int:
-			val = strconv.Itoa(srcMap[k].(int))
-		case reflect.String:
-			val = srcMap[k].(string)
-		}
-		dest += fmt.Sprintf("%s=%s&", k, val)
-	}
-
-	return dest[0 : len(dest)-1], timestamp, nil
-}
-
-func (c *Client) composeBody(req PostRequest) ([]byte, error) {
-	sb, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
-	var srcMap map[string]interface{}
-	if err := json.Unmarshal(sb, &srcMap); err != nil {
-		return nil, err
-	}
-
-	sign, timestamp, err := c.sign(req)
-	if err != nil {
-		return nil, err
-	}
-
-	o := orderedmap.New()
-	for k, v := range srcMap {
-		o.Set(k, v)
-	}
-	o.Set("api_key", c.apiKey)
-	o.Set("timestamp", timestamp)
-	o.SortKeys(sort.Strings)
-	o.Set("sign", sign)
-
-	return o.MarshalJSON()
-}
-
-func (c *Client) doRequest(ctx context.Context, req *http.Request, res interface{}) ([]byte, error) {
+func (c *Client) doRequest(ctx context.Context, req *http.Request, res ResponseType) error {
 	req.Header.Add("Content-Type", "application/json")
 	req = req.WithContext(ctx)
 	response, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	defer response.Body.Close()
+	defer func(b io.ReadCloser) { _ = b.Close() }(response.Body)
 
-	if err := json.Unmarshal(body, &res); err != nil {
-		return nil, fmt.Errorf("body:%s, err:%s", body, err)
+	if err := json.Unmarshal(body, res); err != nil {
+		return err
 	}
-	return body, nil
+	if res.GetCommon().RetMsg != RetMsgOK {
+		return fmt.Errorf("path:%s, response:%s", req.URL, body)
+	}
+	return nil
 }

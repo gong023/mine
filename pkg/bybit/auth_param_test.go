@@ -7,9 +7,12 @@ import (
 )
 
 func TestComposeQuery(t *testing.T) {
-	client := NewClient(TestHost, "dummy_key", "dummy_sec")
+	a := authParam{
+		apiKey:    "dummy_key",
+		apiSecret: "dummy_sec",
+	}
 	cases := map[string]struct {
-		req  Request
+		req  RequestType
 		want *regexp.Regexp
 	}{
 		"simple": {
@@ -30,7 +33,7 @@ func TestComposeQuery(t *testing.T) {
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			vals, ts, err := client.composeQuery(c.req)
+			vals, ts, err := a.composeQuery(c.req)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -45,17 +48,23 @@ func TestComposeQuery(t *testing.T) {
 }
 
 func TestSign(t *testing.T) {
-	client := NewClient(TestHost, "dummy_key", "dummy_sec")
-	_, _, err := client.sign(&WalletBalanceReq{})
+	a := authParam{
+		apiKey:    "dummy_key",
+		apiSecret: "dummy_sec",
+	}
+	_, _, err := a.sign(&WalletBalanceReq{})
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestComposeBody(t *testing.T) {
-	client := NewClient(TestHost, "dummy_key", "dummy_sec")
+	a := authParam{
+		apiKey:    "dummy_key",
+		apiSecret: "dummy_sec",
+	}
 	cases := map[string]struct {
-		req  PostRequest
+		req  RequestType
 		want *regexp.Regexp
 	}{
 		"simple": {
@@ -79,7 +88,7 @@ func TestComposeBody(t *testing.T) {
 
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			got, err := client.composeBody(c.req)
+			got, err := a.composeBody(c.req)
 			if err != nil {
 				t.Fatal(err)
 			}

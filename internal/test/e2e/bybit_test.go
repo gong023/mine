@@ -19,10 +19,12 @@ func TestGetWalletBalance(t *testing.T) {
 
 	ctx := context.Background()
 	cli := bybit.NewClient(cfg.BybitHost, cfg.BybitKey, cfg.BybitSec)
-	_, err = cli.GetWalletBalance(ctx, &bybit.WalletBalanceReq{})
+	res, err := cli.GetWalletBalance(ctx, &bybit.WalletBalanceReq{})
 	if err != nil {
 		t.Fatal(err)
 	}
+	forBreakPoint := res
+	_ = forBreakPoint
 }
 
 func TestOrderCreate(t *testing.T) {
