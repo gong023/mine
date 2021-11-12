@@ -64,8 +64,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	cli := bybit.NewClient(cfg.BybitHost, cfg.BybitKey, cfg.BybitSec)
 	h := handler.New(cfg, cli)
 	decision, err := h.Start(r.Context(), b)
-	if err != nil {
-		return
+	if decision != nil {
+		fmt.Printf("%s\n", decision)
 	}
-	fmt.Printf("%s\n", decision)
 }
