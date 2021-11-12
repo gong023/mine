@@ -2,7 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/gong023/mine/internal/env"
 	"github.com/gong023/mine/pkg/bybit"
 )
 
@@ -12,25 +14,27 @@ type (
 	Position   string
 
 	Decision struct {
+		config   env.Config
 		webhook  []byte
-		position *bybit.Position
+		position bybit.Position
 	}
 )
 
 const (
 	DoNothing        Conclusion = "DoNothing"
-	Long                        = "Long"
-	Short                       = "Short"
-	ReleaseThenLong             = "ReleaseThenLong"
-	ReleaseThenShort            = "ReleaseThenShort"
+	Long             Conclusion = "Long"
+	Short            Conclusion = "Short"
+	ReleaseThenLong  Conclusion = "ReleaseThenLong"
+	ReleaseThenShort Conclusion = "ReleaseThenShort"
 
 	trendUnknown Trend = "TrendUnknown"
-	trendUp            = "TrendUp"
-	trendDown          = "TrendDown"
+	trendUp      Trend = "TrendUp"
+	trendDown    Trend = "TrendDown"
 
-	positionNone  Position = "PositionNone"
-	positionLong           = "PositionLong"
-	positionShort          = "PositionShort"
+	positionUnknown Position = "PositionUnknown"
+	positionNone    Position = "PositionNone"
+	positionLong    Position = "PositionLong"
+	positionShort   Position = "PositionShort"
 )
 
 func (d *Decision) Make() Conclusion {
@@ -59,11 +63,27 @@ func (d *Decision) Make() Conclusion {
 }
 
 func (d *Decision) GetPosition() Position {
-	return positionNone
+	if d.position.Side == bybit.SideBuy {
+		return positionLong
+	}
+	if d.position.Side == bybit.SideSell {
+		return positionShort
+	}
+	if d.position.Side == bybit.SideNone {
+		return positionNone
+	}
+	return positionUnknown
 }
 
 func (d *Decision) ParseWebhook() Trend {
-	return trendDown
+	w := string(d.webhook)
+	if strings.Contains(w, d.config.TrendUp) {
+		return trendUp
+	}
+	if strings.Contains(w, d.config.TrendDown) {
+		return trendDown
+	}
+	return trendUnknown
 }
 
 func (d *Decision) String() string {

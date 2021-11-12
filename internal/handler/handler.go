@@ -27,17 +27,40 @@ func (h *Handler) Start(ctx context.Context, webhook []byte) (*Decision, error) 
 		return nil, err
 	}
 
-	decision := &Decision{webhook: webhook, position: &position.Result}
+	decision := &Decision{
+		config:   h.config,
+		webhook:  webhook,
+		position: position.Result,
+	}
 	conclusion := decision.Make()
-	orders := h.NewOrders(conclusion, &balance.Result.USDT)
+	orders := h.NewOrders(conclusion, &position.Result, &balance.Result.USDT)
 	for _, order := range orders {
 		if _, err := h.client.OrderCreate(ctx, order); err != nil {
 			return decision, err
 		}
 	}
+
+	if conclusion != DoNothing {
+		_, err := h.client.PositionLeverageSave(ctx, &bybit.PositionLeverageSaveReq{
+			Symbol:       h.config.Symbol,
+			Leverage:     h.config.Leverage,
+			LeverageOnly: true,
+		})
+		if err != nil {
+			r, ok := err.(*bybit.ResponseError)
+			if !ok || r.RetCode != bybit.RetCodeLeverageNotModified {
+				return decision, err
+			}
+		}
+	}
+
 	return decision, nil
 }
 
-func (h *Handler) NewOrders(conclusion Conclusion, balance *bybit.WalletBalance) []*bybit.OrderCreateReq {
+func (h *Handler) NewOrders(
+	conclusion Conclusion,
+	position *bybit.Position,
+	balance *bybit.WalletBalance,
+) []*bybit.OrderCreateReq {
 	return nil
 }
