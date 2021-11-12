@@ -231,7 +231,7 @@ type (
 		RiskID              float32     `json:"risk_id,omitempty"`
 		Symbol              string      `json:"symbol,omitempty"`
 		Side                string      `json:"side,omitempty"`
-		Size                float32     `json:"size,omitempty"`
+		Size                float64     `json:"size,omitempty"`
 		PositionValue       json.Number `json:"position_value,omitempty"`
 		EntryPrice          json.Number `json:"entry_price,omitempty"`
 		Leverage            json.Number `json:"leverage,omitempty"`

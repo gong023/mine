@@ -41,13 +41,13 @@ func TestClient_OrderCreate(t *testing.T) {
 			Qty:         30,
 			StopLoss:    70000,
 		},
-		//{
-		//	Symbol:      bybit.SymbolBTCUSD,
-		//	Side:        bybit.SideBuy,
-		//	OrderType:   bybit.OrderTypeMarket,
-		//	TimeInForce: bybit.TIFGoodTillCancel,
-		//	Qty:         30,
-		//},
+		{
+			Symbol:      bybit.SymbolBTCUSD,
+			Side:        bybit.SideBuy,
+			OrderType:   bybit.OrderTypeMarket,
+			TimeInForce: bybit.TIFGoodTillCancel,
+			Qty:         30,
+		},
 	}
 
 	ctx := context.Background()
