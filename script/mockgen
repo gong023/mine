@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+mockgen -source=./pkg/bybit/client.go > pkg/bybit/mock/mock_client.go

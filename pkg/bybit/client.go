@@ -18,10 +18,20 @@ const (
 
 var client = &http.Client{}
 
-type Client struct {
-	host      string
-	authParam *authParam
-}
+type (
+	Client struct {
+		host      string
+		authParam *authParam
+	}
+
+	ClientType interface {
+		WalletBalance(ctx context.Context, req *WalletBalanceReq) (*WalletBalanceRes, error)
+		PositionList(ctx context.Context, req *PositionListReq) (*PositionListRes, error)
+		OrderCreate(ctx context.Context, req *OrderCreateReq) (*OrderCreateRes, error)
+		OrderCancel(ctx context.Context, req *OrderCancelReq) (*OrderCancelRes, error)
+		PositionLeverageSave(ctx context.Context, req *PositionLeverageSaveReq) (*PositionLeverageSaveRes, error)
+	}
+)
 
 func NewClient(host, key, secret string) *Client {
 	return &Client{
