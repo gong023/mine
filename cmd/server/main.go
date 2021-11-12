@@ -8,6 +8,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+
+	"github.com/gong023/mine/internal/env"
+	"github.com/gong023/mine/internal/handler"
+	"github.com/gong023/mine/pkg/bybit"
 )
 
 func main() {
@@ -53,5 +57,15 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("%s\n", b)
+	cfg, err := env.New()
+	if err != nil {
+		return
+	}
+	cli := bybit.NewClient(cfg.BybitHost, cfg.BybitKey, cfg.BybitSec)
+	h := handler.New(cfg, cli)
+	decision, err := h.Start(r.Context(), b)
+	if err != nil {
+		return
+	}
+	fmt.Printf("%s\n", decision)
 }

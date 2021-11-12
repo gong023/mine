@@ -21,7 +21,12 @@ jobs:
     - name: Lint
       uses: golangci/golangci-lint-action@v2
       with:
-        version: 1.43.0
+        version: latest
+        args: --build-tags=e2e --skip-dirs 'mock*'
 
     - name: Test
-      run: go test -v ./...
+      run: ./script/test ci
+      env:
+        BYBIT_HOST: ${{ secrets.TEST_BYBIT_HOST }}
+        BYBIT_KEY: ${{ secrets.TEST_BYBIT_KEY }}
+        BYBIT_SEC: ${{ secrets.TEST_BYBIT_SEC }}
