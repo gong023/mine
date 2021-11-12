@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	Host     = "https://api.bybit.com"
-	TestHost = "https://api-testnet.bybit.com"
+	Host       = "https://api.bybit.com"
+	HostBackup = "https://api.bytick.com"
+	HostTest   = "https://api-testnet.bybit.com"
 )
 
 var client = &http.Client{}
@@ -32,8 +33,14 @@ func NewClient(host, key, secret string) *Client {
 	}
 }
 
-func (c *Client) GetWalletBalance(ctx context.Context, req *WalletBalanceReq) (*WalletBalanceRes, error) {
+func (c *Client) WalletBalance(ctx context.Context, req *WalletBalanceReq) (*WalletBalanceRes, error) {
 	res := &WalletBalanceRes{}
+	err := c.doGet(ctx, req, res)
+	return res, err
+}
+
+func (c *Client) PositionList(ctx context.Context, req *PositionListReq) (*PositionListRes, error) {
+	res := &PositionListRes{}
 	err := c.doGet(ctx, req, res)
 	return res, err
 }

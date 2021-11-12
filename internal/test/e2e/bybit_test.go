@@ -10,7 +10,7 @@ import (
 	"github.com/gong023/mine/pkg/bybit"
 )
 
-func TestGetWalletBalance(t *testing.T) {
+func TestClient_WalletBalance(t *testing.T) {
 	cfg, err := env.New()
 	if err != nil {
 		t.Fatal(err)
@@ -18,7 +18,25 @@ func TestGetWalletBalance(t *testing.T) {
 
 	ctx := context.Background()
 	cli := bybit.NewClient(cfg.BybitHost, cfg.BybitKey, cfg.BybitSec)
-	res, err := cli.GetWalletBalance(ctx, &bybit.WalletBalanceReq{})
+	res, err := cli.WalletBalance(ctx, &bybit.WalletBalanceReq{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	forBreakPoint := res
+	_ = forBreakPoint
+}
+
+func TestClient_PositionList(t *testing.T) {
+	cfg, err := env.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := context.Background()
+	cli := bybit.NewClient(cfg.BybitHost, cfg.BybitKey, cfg.BybitSec)
+	res, err := cli.PositionList(ctx, &bybit.PositionListReq{
+		Symbol: bybit.SymbolBTCUSD,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

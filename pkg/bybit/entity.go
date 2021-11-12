@@ -1,21 +1,26 @@
 package bybit
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
+	"time"
 )
 
 const (
-	SymbolBTCUSD = "BTCUSD"
-	SymbolUSDT   = "USDT"
+	SymbolBTCUSDT = "BTCUSDT"
+	SymbolBTCUSD  = "BTCUSD"
+	SymbolUSDT    = "USDT"
 
 	RetCodeSuccess             float32 = 0
+	RetCodePramsError          float32 = 10001
 	RetCodeLeverageNotModified float32 = 34036
 
 	RetMsgOK = "OK"
 
 	SideBuy  = "Buy"
 	SideSell = "Sell"
+	SideNone = "None"
 
 	OrderTypeMarket = "Market"
 	OrderTypeLimit  = "Limit"
@@ -201,5 +206,59 @@ type PositionLeverageSaveRes struct {
 }
 
 func (p *PositionLeverageSaveRes) GetCommon() Response {
+	return p.Response
+}
+
+type PositionListReq struct {
+	// Though the doc says this is optional, set this
+	// otherwise the response structure is changed.
+	Symbol string `json:"symbol"`
+}
+
+func (p *PositionListReq) Path() string {
+	return "/v2/private/position/list"
+}
+
+type (
+	PositionListRes struct {
+		Response
+		Result Position `json:"result"`
+	}
+
+	Position struct {
+		ID                  float32     `json:"id,omitempty"`
+		UserID              float32     `json:"user_id,omitempty"`
+		RiskID              float32     `json:"risk_id,omitempty"`
+		Symbol              string      `json:"symbol,omitempty"`
+		Side                string      `json:"side,omitempty"`
+		Size                float32     `json:"size,omitempty"`
+		PositionValue       json.Number `json:"position_value,omitempty"`
+		EntryPrice          json.Number `json:"entry_price,omitempty"`
+		Leverage            json.Number `json:"leverage,omitempty"`
+		AutoAddMargin       json.Number `json:"auto_add_margin,omitempty"`
+		PositionMargin      json.Number `json:"position_margin,omitempty"`
+		LiqPrice            json.Number `json:"liq_price,omitempty"`
+		BustPrice           json.Number `json:"bust_price,omitempty"`
+		OccClosingFee       json.Number `json:"occ_closing_fee,omitempty"`
+		OccFundingFee       json.Number `json:"occ_funding_fee,omitempty"`
+		TakeProfit          json.Number `json:"take_profit,omitempty"`
+		StopLoss            json.Number `json:"stop_loss,omitempty"`
+		PositionStatus      string      `json:"position_status,omitempty"`
+		DeleverageIndicator json.Number `json:"deleverage_indicator,omitempty"`
+		OcCalcData          string      `json:"oc_calc_data,omitempty"`
+		OrderMargin         json.Number `json:"order_margin,omitempty"`
+		WalletBalance       json.Number `json:"wallet_balance,omitempty"`
+		UnrealisedPNL       json.Number `json:"unrealised_pnl,omitempty"`
+		RealisedPNL         json.Number `json:"realised_pnl,omitempty"`
+		CumRealisedPNL      json.Number `json:"cum_realised_pnl,omitempty"`
+		CumCommission       json.Number `json:"cum_commission,omitempty"`
+		CrossSeq            json.Number `json:"cross_seq,omitempty"`
+		PositionSeq         json.Number `json:"position_seq,omitempty"`
+		CreatedAt           time.Time   `json:"created_at,omitempty"`
+		UpdatedAt           time.Time   `json:"updated_at,omitempty"`
+	}
+)
+
+func (p *PositionListRes) GetCommon() Response {
 	return p.Response
 }
