@@ -34,7 +34,7 @@ func (h *Handler) Start(ctx context.Context, webhook []byte) (*Decision, error) 
 		position: position.Result,
 	}
 	conclusion := decision.Make()
-	orders := h.NewOrders(conclusion, &position.Result, &balance.Result.USDT)
+	orders := h.NewOrders(conclusion, position.Result, balance.Result.USDT)
 	for _, order := range orders {
 		if _, err := h.client.OrderCreate(ctx, order); err != nil {
 			return decision, err
@@ -61,8 +61,8 @@ func (h *Handler) Start(ctx context.Context, webhook []byte) (*Decision, error) 
 // NewOrders issues the orders with isolated margin, and MarketPrice.
 func (h *Handler) NewOrders(
 	conclusion Conclusion,
-	position *bybit.Position,
-	balance *bybit.WalletBalance,
+	position bybit.Position,
+	balance bybit.WalletBalance,
 ) (orders []*bybit.OrderCreateReq) {
 	if conclusion == ReleaseThenLong {
 		orders = append(orders, &bybit.OrderCreateReq{
