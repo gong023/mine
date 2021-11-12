@@ -44,6 +44,12 @@ func (c *Client) OrderCreate(ctx context.Context, req *OrderCreateReq) (*OrderCr
 	return res, err
 }
 
+func (c *Client) OrderCancel(ctx context.Context, req *OrderCancelReq) (*OrderCancelRes, error) {
+	res := &OrderCancelRes{}
+	err := c.doPost(ctx, req, res)
+	return res, err
+}
+
 func (c *Client) PositionLeverageSave(ctx context.Context, req *PositionLeverageSaveReq) (*PositionLeverageSaveRes, error) {
 	res := &PositionLeverageSaveRes{}
 	err := c.doPost(ctx, req, res)
@@ -101,8 +107,8 @@ func (c *Client) doRequest(ctx context.Context, req *http.Request, res ResponseT
 	if err := json.Unmarshal(body, res); err != nil {
 		return err
 	}
-	if res.GetCommon().RetMsg != RetMsgOK {
-		return fmt.Errorf("path:%s, response:%s", req.URL, body)
+	if r := res.GetCommon(); r.RetMsg != RetMsgOK {
+		return NewResponseError(r, body, req.Method, req.URL)
 	}
 	return nil
 }

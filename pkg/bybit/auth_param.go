@@ -61,6 +61,8 @@ func (a *authParam) composeQuery(r RequestType) (string, int64, error) {
 			val = strconv.FormatInt(srcMap[k].(int64), 10)
 		case reflect.Int:
 			val = strconv.Itoa(srcMap[k].(int))
+		case reflect.Bool:
+			val = strconv.FormatBool(srcMap[k].(bool))
 		case reflect.String:
 			val = srcMap[k].(string)
 		}

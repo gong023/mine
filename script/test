@@ -2,9 +2,12 @@
 
 if [ "$1" = "e2e" ]; then
     echo "running e2e tests"
-    go test -tags="e2e" ./internal/test/e2e
+    go test -tags="e2e post" ./internal/test/e2e
 elif [ "$1" = "all" ]; then
     echo "running all tests"
+    go test -tags="e2e post" ./...
+elif [ "$1" = "ci" ]; then
+    echo "running tests without post"
     go test -tags="e2e" ./...
 else
     echo "running unit tests"

@@ -25,7 +25,7 @@ jobs:
         args: --build-tags=e2e --skip-dirs 'mock*'
 
     - name: Test
-      run: ./script/test all
+      run: ./script/test ci
       env:
         BYBIT_HOST: ${{ secrets.TEST_BYBIT_HOST }}
         BYBIT_KEY: ${{ secrets.TEST_BYBIT_KEY }}

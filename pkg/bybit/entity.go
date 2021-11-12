@@ -1,11 +1,18 @@
 package bybit
 
+import (
+	"fmt"
+	"net/url"
+)
+
 const (
 	SymbolBTCUSD = "BTCUSD"
 	SymbolUSDT   = "USDT"
 
-	RetCodeSuccess float32 = 0
-	RetMsgOK               = "OK"
+	RetCodeSuccess             float32 = 0
+	RetCodeLeverageNotModified float32 = 34036
+
+	RetMsgOK = "OK"
 
 	SideBuy  = "Buy"
 	SideSell = "Sell"
@@ -18,9 +25,9 @@ const (
 	TIFFillOrKill        = "FillOrKill"
 	TIFPostOnly          = "PostOnly"
 
-	TriggerByLastPrice   = "LastPrice"
-	TriggerByIndexPrice  = "IndexPrice"
-	TriggerByMarketPrice = "MarkPrice"
+	TriggerByLastPrice  = "LastPrice"
+	TriggerByIndexPrice = "IndexPrice"
+	TriggerByMarkPrice  = "MarkPrice"
 )
 
 type (
@@ -42,7 +49,37 @@ type (
 		RetMsg           string  `json:"ret_msg"`
 		TimeNow          string  `json:"time_now"`
 	}
+)
 
+type ResponseError struct {
+	Response
+	RawResBody []byte
+	Method     string
+	URL        *url.URL
+}
+
+func (r *ResponseError) Error() string {
+	return fmt.Sprintf("method:%s, url:%s, resBody:%s", r.Method, r.URL, r.RawResBody)
+}
+
+func NewResponseError(r Response, rr []byte, method string, url *url.URL) error {
+	return &ResponseError{
+		Response:   r,
+		RawResBody: rr,
+		Method:     method,
+		URL:        url,
+	}
+}
+
+type WalletBalanceReq struct {
+	Coin string `json:"coin,omitempty"`
+}
+
+func (w *WalletBalanceReq) Path() string {
+	return "/v2/private/wallet/balance"
+}
+
+type (
 	WalletBalanceRes struct {
 		Response
 		Result struct {
@@ -69,67 +106,65 @@ type (
 		GivenCash        float64 `json:"given_cash,omitempty"`
 		ServiceCash      float64 `json:"service_cash,omitempty"`
 	}
-
-	OrderCreateRes struct {
-		Response
-		Result struct {
-			OrderID       string  `json:"order_id,omitempty"`
-			UserID        float32 `json:"user_id,omitempty"`
-			Symbol        string  `json:"symbol,omitempty"`
-			Side          string  `json:"side,omitempty"`
-			OrderType     string  `json:"order_type,omitempty"`
-			Price         float64 `json:"price,omitempty"`
-			Qty           float64 `json:"qty,omitempty"`
-			TimeInForce   string  `json:"time_in_force,omitempty"`
-			OrderStatus   string  `json:"order_status,omitempty"`
-			LastExecTime  float64 `json:"last_exec_time,omitempty"`
-			LastExecPrice float64 `json:"last_exec_price,omitempty"`
-			LeavesQty     float32 `json:"leaves_qty,omitempty"`
-			CumExecQty    float32 `json:"cum_exec_qty,omitempty"`
-			CumExecValue  float32 `json:"cum_exec_value,omitempty"`
-			CumExecFee    float64 `json:"cum_exec_fee,omitempty"`
-			RejectReason  string  `json:"reject_reason,omitempty"`
-			OrderLinkID   string  `json:"order_link_id,omitempty"`
-			CreatedAt     string  `json:"created_at,omitempty"`
-			UpdatedAt     string  `json:"updated_at,omitempty"`
-		} `json:"result"`
-	}
-
-	PositionLeverageSaveRes struct {
-		Response
-	}
 )
-
-type WalletBalanceReq struct {
-	Coin string `json:"coin,omitempty"`
-}
-
-func (w *WalletBalanceReq) Path() string {
-	return "/v2/private/wallet/balance"
-}
 
 func (w *WalletBalanceRes) GetCommon() Response {
 	return w.Response
 }
 
-type OrderCreateReq struct {
-	Symbol         string  `json:"symbol"`
-	Side           string  `json:"side"`
-	OrderType      string  `json:"order_type"`
-	TimeInForce    string  `json:"time_in_force"`
-	Qty            float64 `json:"qty"`
-	Price          float64 `json:"price,omitempty"`
-	TakeProfit     float64 `json:"take_profit,omitempty"`
-	StopLoss       float64 `json:"stop_loss,omitempty"`
-	ReduceOnly     bool    `json:"reduce_only,omitempty"`
-	TpTriggerBy    string  `json:"tp_trigger_by,omitempty"`
-	SlTriggerBy    string  `json:"sl_trigger_by,omitempty"`
-	CloseOnTrigger bool    `json:"close_on_trigger,omitempty"`
-	OrderLinkID    string  `json:"order_link_id,omitempty"`
-}
+type (
+	OrderCreateReq struct {
+		Symbol         string  `json:"symbol"`
+		Side           string  `json:"side"`
+		OrderType      string  `json:"order_type"`
+		TimeInForce    string  `json:"time_in_force"`
+		Qty            float64 `json:"qty"`
+		Price          float64 `json:"price,omitempty"`
+		TakeProfit     float64 `json:"take_profit,omitempty"`
+		StopLoss       float64 `json:"stop_loss,omitempty"`
+		ReduceOnly     bool    `json:"reduce_only,omitempty"`
+		TpTriggerBy    string  `json:"tp_trigger_by,omitempty"`
+		SlTriggerBy    string  `json:"sl_trigger_by,omitempty"`
+		CloseOnTrigger bool    `json:"close_on_trigger,omitempty"`
+		OrderLinkID    string  `json:"order_link_id,omitempty"`
+	}
+)
 
 func (o *OrderCreateReq) Path() string {
 	return "/v2/private/order/create"
+}
+
+type (
+	OrderCreateRes struct {
+		Response
+		Result Order `json:"result"`
+	}
+
+	Order struct {
+		OrderID       string  `json:"order_id,omitempty"`
+		UserID        float32 `json:"user_id,omitempty"`
+		Symbol        string  `json:"symbol,omitempty"`
+		Side          string  `json:"side,omitempty"`
+		OrderType     string  `json:"order_type,omitempty"`
+		Price         float64 `json:"price,omitempty"`
+		Qty           float64 `json:"qty,omitempty"`
+		TimeInForce   string  `json:"time_in_force,omitempty"`
+		OrderStatus   string  `json:"order_status,omitempty"`
+		LastExecTime  float64 `json:"last_exec_time,omitempty"`
+		LastExecPrice float64 `json:"last_exec_price,omitempty"`
+		LeavesQty     float32 `json:"leaves_qty,omitempty"`
+		CumExecQty    float32 `json:"cum_exec_qty,omitempty"`
+		CumExecValue  float32 `json:"cum_exec_value,omitempty"`
+		CumExecFee    float64 `json:"cum_exec_fee,omitempty"`
+		RejectReason  string  `json:"reject_reason,omitempty"`
+		OrderLinkID   string  `json:"order_link_id,omitempty"`
+		CreatedAt     string  `json:"created_at,omitempty"`
+		UpdatedAt     string  `json:"updated_at,omitempty"`
+	}
+)
+
+func (o *OrderCreateRes) GetCommon() Response {
+	return o.Response
 }
 
 type OrderCancelReq struct {
@@ -142,7 +177,12 @@ func (o *OrderCancelReq) Path() string {
 	return "/v2/private/order/cancel"
 }
 
-func (o *OrderCreateRes) GetCommon() Response {
+type OrderCancelRes struct {
+	Response
+	Result Order `json:"result"`
+}
+
+func (o *OrderCancelRes) GetCommon() Response {
 	return o.Response
 }
 
@@ -154,6 +194,10 @@ type PositionLeverageSaveReq struct {
 
 func (p *PositionLeverageSaveReq) Path() string {
 	return "/v2/private/position/leverage/save"
+}
+
+type PositionLeverageSaveRes struct {
+	Response
 }
 
 func (p *PositionLeverageSaveRes) GetCommon() Response {
