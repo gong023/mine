@@ -16,8 +16,6 @@ type Config struct {
 }
 
 func New() (cfg Config, err error) {
-	if err := env.Parse(&cfg); err != nil {
-		return cfg, err
-	}
-	return cfg, nil
+	err = env.Parse(&cfg)
+	return cfg, err
 }
