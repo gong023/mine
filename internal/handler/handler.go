@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"math"
 
 	"github.com/gong023/mine/internal/env"
@@ -18,7 +19,9 @@ func New(config env.Config, client bybit.ClientType) *Handler {
 }
 
 func (h *Handler) Start(ctx context.Context, webhook []byte) (*Decision, error) {
-	position, err := h.client.PositionList(ctx, &bybit.PositionListReq{Symbol: h.config.Symbol})
+	position, err := h.client.PositionList(ctx, &bybit.PositionListReq{
+		Symbol: h.config.Symbol,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -26,6 +29,9 @@ func (h *Handler) Start(ctx context.Context, webhook []byte) (*Decision, error) 
 	balance, err := h.client.WalletBalance(ctx, &bybit.WalletBalanceReq{})
 	if err != nil {
 		return nil, err
+	}
+	if balance.Result.USDT.AvailableBalance == 0 {
+		return nil, errors.New("no available balance for USDT")
 	}
 
 	decision := &Decision{

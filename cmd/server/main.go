@@ -34,7 +34,6 @@ func main() {
 	}()
 
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		// Error starting or closing listener:
 		log.Fatalf("HTTP server ListenAndServe: %v", err)
 	}
 
@@ -56,6 +55,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	fmt.Printf("sent: %s\n", b)
 
 	cfg, err := env.New()
 	if err != nil {
