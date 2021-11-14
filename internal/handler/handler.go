@@ -89,7 +89,7 @@ func (h *Handler) NewOrders(
 		})
 	}
 
-	qty := round(balance.AvailableBalance / h.config.UseBalance)
+	qty := round(balance.AvailableBalance * h.config.UseBalance)
 	if conclusion == Long || conclusion == ReleaseThenLong {
 		orders = append(orders, &bybit.OrderCreateReq{
 			Symbol:      h.config.Symbol,
